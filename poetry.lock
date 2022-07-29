@@ -174,6 +174,17 @@ dotenv = ["python-dotenv (>=0.10.4)"]
 email = ["email-validator (>=1.0.3)"]
 
 [[package]]
+name = "python-dotenv"
+version = "0.20.0"
+description = "Read key-value pairs from a .env file and set them as environment variables"
+category = "main"
+optional = false
+python-versions = ">=3.5"
+
+[package.extras]
+cli = ["click (>=5.0)"]
+
+[[package]]
 name = "sniffio"
 version = "1.2.0"
 description = "Sniff out which async library your code is running under"
@@ -261,7 +272,7 @@ standard = ["websockets (>=10.0)", "httptools (>=0.4.0)", "watchfiles (>=0.13)",
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "f41516b39feead88ee0af8ae3f1213257982e8c42e7c0abf48434e1f7d0ea379"
+content-hash = "d5fac36f3f2f28bff1f064920b0671e30ff18bd9a02087f871fad6d6daa1d24b"
 
 [metadata.files]
 alembic = []
@@ -282,6 +293,7 @@ markupsafe = []
 psycopg2-binary = []
 pycodestyle = []
 pydantic = []
+python-dotenv = []
 sniffio = []
 sqlalchemy = []
 starlette = []
