@@ -33,5 +33,10 @@ def create_recipe(recipe: SchemaRecipe):
     return db_recipe
 
 
+@app.get("/recipes/", response_model=list[SchemaRecipe])
+def get_recipes():
+    return db.session.query(ModelRecipe).all()
+
+
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
