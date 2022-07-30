@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 from recipe_app import crud
 from recipe_app import deps
 from recipe_app.schemas.recipe import Recipe, RecipeCreate, RecipeSearchResults
+from recipe_app.schemas.ingredient import Ingredient, IngredientCreate
 
 # Project Directories
 ROOT = Path(__file__).resolve().parent.parent
@@ -64,7 +65,7 @@ def search_recipes(
     return {"results": list(results)[:max_results]}
 
 
-@ api_router.post('/recipe/', status_code=201, response_model=Recipe)
+@api_router.post('/recipe/', status_code=201, response_model=Recipe)
 def create_recipe(*, recipe_in: RecipeCreate, db: Session = Depends(deps.get_db)) -> dict:
     """
     Create a new recipe in the database
@@ -75,18 +76,12 @@ def create_recipe(*, recipe_in: RecipeCreate, db: Session = Depends(deps.get_db)
     return recipe
 
 
-    # @app.post("/recipe/", response_model=RecipeBase)
-    # def create_recipe(recipe: Recipe):
-    #     recipe = CRUDRecipe(Recipe).create()
-    #     db_recipe = Recipe(
-    #         name=recipe.name, cooking_time_min=recipe.cooking_time_min, num_people=recipe.num_people, kcal=recipe.kcal
-    #     )
-    #     db.session.add(db_recipe)
-    #     db.session.commit()
-    #     return db_recipe
-    # @app.get("/recipes/", response_model=list[SchemaRecipe])
-    # def get_recipes():
-    #     return db.session.query(ModelRecipe).all()
+@api_router.get('/recipe_ingredients/', status_code=200, response_model=Ingredient)
+def get_all_ingredients(*, skip: Optional[int] = 0, max_results: Optional[int] = 10, db: Session = Depends(deps.get_db)) -> list:
+    return crud.ingredient.get_multi(
+        db=db, skip=skip, limit=max_results)
+
+
 app.include_router(api_router)
 
 if __name__ == "__main__":
