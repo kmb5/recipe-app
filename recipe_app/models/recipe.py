@@ -12,3 +12,4 @@ class Recipe(Base):
     kcal = Column(Integer)
     submitter_id = Column(Integer, ForeignKey("user.id"), nullable=True)
     submitter = relationship("User", back_populates="recipes")
+    ingredients = relationship("Ingredient", back_populates="recipes")
