@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 import uvicorn
 from fastapi import FastAPI, APIRouter, Query, HTTPException, Request, Depends
@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 
 from recipe_app import crud
 from recipe_app import deps
-from recipe_app.schemas.recipe import Recipe, RecipeCreate
+from recipe_app.schemas.recipe import Recipe, RecipeCreate, RecipeSearchResults
 
 # Project Directories
 ROOT = Path(__file__).resolve().parent.parent
@@ -48,7 +48,23 @@ def fetch_recipe(*, recipe_id: int, db: Session = Depends(deps.get_db)) -> Any:
     return result
 
 
-@api_router.post('/recipe/', status_code=201, response_model=Recipe)
+@api_router.get("/search/", status_code=200, response_model=RecipeSearchResults)
+def search_recipes(
+    *,
+    keyword: Optional[str] = Query(None, min_length=3, example="chicken"),
+    max_results: Optional[int] = 10,
+    db: Session = Depends(deps.get_db)
+) -> dict:
+    recipes = crud.recipe.get_multi(db=db, limit=max_results)
+    if not keyword:
+        return {"results": recipes}
+
+    results = filter(lambda recipe: keyword.lower()
+                     in recipe.name.lower(), recipes)
+    return {"results": list(results)[:max_results]}
+
+
+@ api_router.post('/recipe/', status_code=201, response_model=Recipe)
 def create_recipe(*, recipe_in: RecipeCreate, db: Session = Depends(deps.get_db)) -> dict:
     """
     Create a new recipe in the database
@@ -57,6 +73,7 @@ def create_recipe(*, recipe_in: RecipeCreate, db: Session = Depends(deps.get_db)
     recipe = crud.recipe.create(db=db, obj_in=recipe_in)
 
     return recipe
+
 
     # @app.post("/recipe/", response_model=RecipeBase)
     # def create_recipe(recipe: Recipe):

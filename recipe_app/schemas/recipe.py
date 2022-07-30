@@ -1,3 +1,4 @@
+from typing import Sequence
 from pydantic import BaseModel
 
 
@@ -41,3 +42,7 @@ class Recipe(RecipeInDBBase):
 
 class RecipeInDB(RecipeInDBBase):
     pass
+
+
+class RecipeSearchResults(BaseModel):
+    results: Sequence[Recipe]
