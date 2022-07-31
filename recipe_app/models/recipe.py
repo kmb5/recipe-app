@@ -1,15 +1,14 @@
-from sqlalchemy import Column, Integer, String, ForeignKey
-from sqlalchemy.orm import relationship
-
-from recipe_app.db.base_class import Base
+from typing import Optional
+from sqlmodel import Field, SQLModel, Relationship
 
 
-class Recipe(Base):
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String)
-    cooking_time_min = Column(Integer)
-    num_people = Column(Integer)
-    kcal = Column(Integer)
-    submitter_id = Column(Integer, ForeignKey("user.id"), nullable=True)
-    submitter = relationship("User", back_populates="recipes")
-    ingredients = relationship("RecipeIngredient", back_populates="recipes")
+class Recipe(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True, index=True)
+    name: str = Field(index=True)
+    cooking_time_min: int
+    num_people: int
+    kcal: int
+    submitter_id: Optional[int] = Field(default=None, foreign_key="user.id")
+    submitter: Optional["User"] = Relationship(back_populates="recipes")
+    ingredients: Optional["RecipeIngredient"] = Relationship(
+        back_populates="recipes")
