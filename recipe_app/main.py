@@ -9,8 +9,7 @@ from dotenv import load_dotenv
 
 from recipe_app import crud
 from recipe_app import deps
-from recipe_app.schemas.recipe import Recipe, RecipeCreate, RecipeSearchResults
-from recipe_app.schemas.ingredient import Ingredient, IngredientCreate
+from recipe_app.schemas.recipe_ingredient import RecipeBase, IngredientBase, RecipeInDBBase, RecipeIngredientBase, RecipeSearchResults
 
 # Project Directories
 ROOT = Path(__file__).resolve().parent.parent
@@ -37,7 +36,7 @@ def root(request: Request, db: Session = Depends(deps.get_db)) -> dict:
     return TEMPLATES.TemplateResponse("index.html", {"request": request, "recipes": recipes})
 
 
-@api_router.get('/recipe/{recipe_id}', status_code=200, response_model=Recipe)
+@api_router.get('/recipe/{recipe_id}', status_code=200, response_model=RecipeInDBBase)
 def fetch_recipe(*, recipe_id: int, db: Session = Depends(deps.get_db)) -> Any:
     """
     Fetch a single recipe by ID
@@ -65,21 +64,35 @@ def search_recipes(
     return {"results": list(results)[:max_results]}
 
 
-@api_router.post('/recipe/', status_code=201, response_model=Recipe)
-def create_recipe(*, recipe_in: RecipeCreate, db: Session = Depends(deps.get_db)) -> dict:
+@api_router.post('/recipe/', status_code=201, response_model=RecipeInDBBase)
+def create_recipe(*, recipe_in: RecipeBase, db: Session = Depends(deps.get_db)) -> dict:
     """
     Create a new recipe in the database
     """
 
-    recipe = crud.recipe.create(db=db, obj_in=recipe_in)
-
-    return recipe
+    print(recipe_in)
 
 
-@api_router.get('/recipe_ingredients/', status_code=200, response_model=Ingredient)
-def get_all_ingredients(*, skip: Optional[int] = 0, max_results: Optional[int] = 10, db: Session = Depends(deps.get_db)) -> list:
+@api_router.post('/ingredient/', status_code=201, response_model=IngredientBase)
+def create_ingredient(*, ingredient_in: IngredientBase, db: Session = Depends(deps.get_db)) -> dict:
+    """Create a new ingredient in the database"""
+
+    ingredient = crud.ingredient.get_or_create(db=db, obj_in=ingredient_in)
+
+    return ingredient
+
+
+@api_router.get('/ingredients/', status_code=200, response_model=list[IngredientBase])
+def get_all_ingredients(*, skip: Optional[int] = 0, max_results: Optional[int] = 10, db: Session = Depends(deps.get_db)) -> dict:
     return crud.ingredient.get_multi(
         db=db, skip=skip, limit=max_results)
+
+
+def create_recipe_ingredient(*, recipe_ingredient_in: RecipeIngredientBase, db: Session = Depends(deps.get_db)) -> dict:
+
+    recipe_ingredient = crud.recipe_ingredient.create(
+        db=db, obj_in=recipe_ingredient_in)
+    return recipe_ingredient
 
 
 app.include_router(api_router)
