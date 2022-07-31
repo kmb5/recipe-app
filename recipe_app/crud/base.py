@@ -37,6 +37,13 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         db.refresh(db_obj)
         return db_obj
 
+    def get_or_create(self, db: Session, obj_in: CreateSchemaType) -> ModelType:
+        instance = self.get(db=db, name=obj_in.name)
+        if instance:
+            return instance
+        else:
+            self.create(db=db, obj_in=obj_in)
+
     def update(self, db: Session, *, db_obj: ModelType, obj_in: Union[UpdateSchemaType, Dict[str, Any]]) -> ModelType:
         obj_data = jsonable_encoder(db_obj)
         if isinstance(obj_in, dict):
