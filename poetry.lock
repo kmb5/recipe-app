@@ -268,6 +268,30 @@ pymysql = ["pymysql (<1)", "pymysql"]
 sqlcipher = ["sqlcipher3-binary"]
 
 [[package]]
+name = "sqlalchemy2-stubs"
+version = "0.0.2a24"
+description = "Typing Stubs for SQLAlchemy 1.4"
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[package.dependencies]
+typing-extensions = ">=3.7.4"
+
+[[package]]
+name = "sqlmodel"
+version = "0.0.6"
+description = "SQLModel, SQL databases in Python, designed for simplicity, compatibility, and robustness."
+category = "main"
+optional = false
+python-versions = ">=3.6.1,<4.0.0"
+
+[package.dependencies]
+pydantic = ">=1.8.2,<2.0.0"
+SQLAlchemy = ">=1.4.17,<1.5.0"
+sqlalchemy2-stubs = "*"
+
+[[package]]
 name = "starlette"
 version = "0.19.1"
 description = "The little ASGI library that shines."
@@ -315,7 +339,7 @@ standard = ["websockets (>=10.0)", "httptools (>=0.4.0)", "watchfiles (>=0.13)",
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "d40ce56d6a191f16c24a5c7020a6d7e2ebf45e568fd2279682a8481b8b9e9130"
+content-hash = "ffb2627f47074ce6745225e715bc1d835e32bdeae19a414bf49867d872be92ea"
 
 [metadata.files]
 alembic = []
@@ -342,6 +366,8 @@ pydantic = []
 python-dotenv = []
 sniffio = []
 sqlalchemy = []
+sqlalchemy2-stubs = []
+sqlmodel = []
 starlette = []
 toml = []
 typing-extensions = []
