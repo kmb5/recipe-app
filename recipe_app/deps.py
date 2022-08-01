@@ -1,12 +1,8 @@
 from typing import Generator
+from sqlmodel import Session
+from recipe_app.db.session import engine
 
-from recipe_app.db.session import SessionLocal
 
-
-def get_db() -> Generator:
-    db = SessionLocal()
-    db.current_user_id = None
-    try:
-        yield db
-    finally:
-        db.close()
+def get_session() -> Generator:
+    with Session(engine) as session:
+        yield session

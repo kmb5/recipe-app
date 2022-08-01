@@ -2,7 +2,24 @@ from typing import Optional
 from sqlmodel import Field, SQLModel, Relationship
 
 
-class Ingredient(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True, index=True)
+class IngredientBase(SQLModel):
     name: str = Field(index=True)
-    recipes: list["Recipe"] = Relationship(back_populates="ingredients")
+
+
+class Ingredient(IngredientBase, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True, index=True)
+    recipes: list["RecipeIngredient"] = Relationship(
+        back_populates="ingredients")
+
+
+class IngredientCreate(IngredientBase):
+    pass
+
+
+class IngredientRead(IngredientBase):
+    id: int
+
+
+class IngredientUpdate(SQLModel):
+    name: Optional[str] = None
+    #recipes: Optional[list["Recipe"]] = None
