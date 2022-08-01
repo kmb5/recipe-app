@@ -8,11 +8,8 @@ from fastapi.templating import Jinja2Templates
 from sqlmodel import Session, select
 from dotenv import load_dotenv
 
-from recipe_app import crud
 from recipe_app import deps
-from recipe_app.schemas.recipe_ingredient import RecipeBase, IngredientBase, RecipeInDBBase, RecipeIngredientBase, RecipeSearchResults
-from recipe_app.models.ingredient import Ingredient, IngredientCreate, IngredientRead, IngredientUpdate
-from recipe_app.models import Recipe, RecipeIngredient, User
+from recipe_app.models import *
 
 
 # Project Directories
@@ -36,11 +33,11 @@ def root(request: Request, db_session: Session = Depends(deps.get_session)) -> d
     """
     Root GET
     """
-    recipes = crud.recipe.get_multi(db=db_session, limit=10)
+    recipes = db_session.exec(select(Recipe).offset(0).limit(100)).all()
     return TEMPLATES.TemplateResponse("index.html", {"request": request, "recipes": recipes})
 
 
-@api_router.get('/ingredients/{ingredient_id}', status_code=200, response_model=IngredientRead)
+@api_router.get('/ingredients/{ingredient_id}', status_code=200, response_model=IngredientReadWithRecipe)
 def read_ingredient(ingredient_id: int, db_session: Session = Depends(deps.get_session)):
     """
     Read a single ingredient by ID
@@ -52,13 +49,30 @@ def read_ingredient(ingredient_id: int, db_session: Session = Depends(deps.get_s
     return result
 
 
-@api_router.get('/ingredients/', status_code=200, response_model=list[IngredientRead])
+@api_router.get('/ingredients/', status_code=200, response_model=list[IngredientReadWithRecipe])
 def get_all_ingredients(offset: int = 0, limit: int = Query(default=100, lte=100), db_session: Session = Depends(deps.get_session)):
 
     return db_session.exec(select(Ingredient).offset(offset).limit(limit)).all()
 
 
-@api_router.post('/ingredients/', status_code=201, response_model=IngredientRead)
+@api_router.get('/recipes/', status_code=200, response_model=list[RecipeReadWithIngredients])
+def get_all_recipes(offset: int = 0, limit: int = Query(default=100, lte=100), db_session: Session = Depends(deps.get_session)):
+    return db_session.exec(select(Recipe).offset(offset).limit(limit)).all()
+
+
+@api_router.get('/recipes/{recipe_id}', status_code=200, response_model=RecipeReadWithIngredients)
+def read_recipe(recipe_id: int, db_session: Session = Depends(deps.get_session)):
+    """
+    Read a single ingredient by ID
+    """
+    result = db_session.get(Recipe, recipe_id)
+    if not result:
+        raise HTTPException(
+            status_code=404, detail=f"Ingredient with id {recipe_id} not found")
+    return result
+
+
+@api_router.post('/ingredients/', status_code=201, response_model=IngredientReadWithRecipe)
 def create_ingredient(ingredient_in: IngredientCreate, db_session: Session = Depends(deps.get_session)):
     """Create a new ingredient in the database"""
 
@@ -93,31 +107,41 @@ def delete_ingredient(ingredient_id: int, db_session: Session = Depends(deps.get
     return {"ok": True}
 
 
+@api_router.post('/recipes/', status_code=201, response_model=RecipeReadWithIngredients)
+def create_recipe(recipe_in: RecipeCreate, db_session: Session = Depends(deps.get_session)):
+    """Create a new ingredient in the database"""
+
+    db_recipe = Recipe.from_orm(recipe_in)
+    db_session.add(db_recipe)
+    db_session.commit()
+    db_session.refresh(db_recipe)
+    return db_recipe
+
 # --------
 
-@api_router.get("/search/", status_code=200, response_model=RecipeSearchResults)
-def search_recipes(
-    *,
-    keyword: Optional[str] = Query(None, min_length=3, example="chicken"),
-    max_results: Optional[int] = 10,
-    db_session: Session = Depends(deps.get_session)
-) -> dict:
-    recipes = crud.recipe.get_multi(db=db_session, limit=max_results)
-    if not keyword:
-        return {"results": recipes}
+# @api_router.get("/search/", status_code=200, response_model=RecipeSearchResults)
+# def search_recipes(
+#     *,
+#     keyword: Optional[str] = Query(None, min_length=3, example="chicken"),
+#     max_results: Optional[int] = 10,
+#     db_session: Session = Depends(deps.get_session)
+# ) -> dict:
+#     recipes = crud.recipe.get_multi(db=db_session, limit=max_results)
+#     if not keyword:
+#         return {"results": recipes}
 
-    results = filter(lambda recipe: keyword.lower()
-                     in recipe.name.lower(), recipes)
-    return {"results": list(results)[:max_results]}
+#     results = filter(lambda recipe: keyword.lower()
+#                      in recipe.name.lower(), recipes)
+#     return {"results": list(results)[:max_results]}
 
 
-@api_router.post('/recipe/', status_code=201, response_model=RecipeInDBBase)
-def create_recipe(*, recipe_in: RecipeBase, db_session: Session = Depends(deps.get_session)) -> dict:
-    """
-    Create a new recipe in the database
-    """
+# @api_router.post('/recipe/', status_code=201, response_model=RecipeInDBBase)
+# def create_recipe(*, recipe_in: RecipeBase, db_session: Session = Depends(deps.get_session)) -> dict:
+#     """
+#     Create a new recipe in the database
+#     """
 
-    print(recipe_in)
+#     print(recipe_in)
 
 
 app.include_router(api_router)
