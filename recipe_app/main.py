@@ -5,11 +5,12 @@ import uvicorn
 from fastapi import FastAPI, APIRouter, Query, HTTPException, Request, Depends
 from fastapi.templating import Jinja2Templates
 
-from sqlmodel import Session, select
+from sqlmodel import SQLModel, Session, select
 from dotenv import load_dotenv
 
 from recipe_app import deps
 from recipe_app.models import *
+from recipe_app.models.models import IngredientForRecipe, RecipeCreateWithIngredients
 
 
 # Project Directories
@@ -21,6 +22,11 @@ load_dotenv(Path(ROOT, ".env"))
 
 app = FastAPI(title="Recipe API")
 api_router = APIRouter()
+
+
+@app.on_event("startup")
+def on_startup():
+    SQLModel.metadata.create_all(deps.engine)
 
 
 @api_router.get("/ping", status_code=200)
@@ -63,13 +69,43 @@ def get_all_recipes(offset: int = 0, limit: int = Query(default=100, lte=100), d
 @api_router.get('/recipes/{recipe_id}', status_code=200, response_model=RecipeReadWithIngredients)
 def read_recipe(recipe_id: int, db_session: Session = Depends(deps.get_session)):
     """
+    Read a single recipe by ID
+    """
+    result = db_session.get(Recipe, recipe_id)
+    if not result:
+        raise HTTPException(
+            status_code=404, detail=f"Recipe with id {recipe_id} not found")
+    return result
+
+
+@api_router.get('/recipes/{recipe_id}/ingredients', status_code=200, response_model=list[Ingredient])
+def read_recipe(recipe_id: int, db_session: Session = Depends(deps.get_session)):
+    """
     Read a single ingredient by ID
     """
     result = db_session.get(Recipe, recipe_id)
     if not result:
         raise HTTPException(
-            status_code=404, detail=f"Ingredient with id {recipe_id} not found")
-    return result
+            status_code=404, detail=f"Recipe with id {recipe_id} not found")
+
+    return result.ingredients
+
+
+@api_router.post('/recipes/{recipe_id}/ingredients', status_code=200, response_model=RecipeReadWithIngredients)
+def add_ingredients_for_recipe(recipe_id: int, ingredients: list[IngredientForRecipe], db_session: Session = Depends(deps.get_session)):
+    recipe = db_session.get(Recipe, recipe_id)
+    if not recipe:
+        raise HTTPException(
+            status_code=404, detail=f"Recipe with id {recipe_id} not found")
+
+    for ingredient in ingredients:
+        db_ingredient = Ingredient.from_orm(ingredient)
+        db_ingredient.recipe_id = recipe.id
+
+        db_session.add(db_ingredient)
+        db_session.commit()
+        db_session.refresh(db_ingredient)
+    return db_session.get(Recipe, recipe_id)
 
 
 @api_router.post('/ingredients/', status_code=201, response_model=IngredientReadWithRecipe)
@@ -87,7 +123,7 @@ def create_ingredient(ingredient_in: IngredientCreate, db_session: Session = Dep
 def update_ingredient(ingredient_id: int, ingredient: IngredientUpdate, db_session: Session = Depends(deps.get_session)):
     db_ingredient = db_session.get(Ingredient, ingredient_id)
     if not db_ingredient:
-        raise HTTPException(status_code=404, detaul="Ingredient not found")
+        raise HTTPException(status_code=404, detail="Ingredient not found")
     ingredient_data = ingredient.dict(exclude_unset=True)
     for k, v in ingredient_data.items():
         setattr(db_ingredient, k, v)
@@ -107,8 +143,8 @@ def delete_ingredient(ingredient_id: int, db_session: Session = Depends(deps.get
     return {"ok": True}
 
 
-@api_router.post('/recipes/', status_code=201, response_model=RecipeReadWithIngredients)
-def create_recipe(recipe_in: RecipeCreate, db_session: Session = Depends(deps.get_session)):
+@api_router.post('/recipes/', status_code=201, response_model=RecipeCreateWithIngredients)
+def create_recipe(recipe_in: RecipeCreateWithIngredients, db_session: Session = Depends(deps.get_session)):
     """Create a new ingredient in the database"""
 
     db_recipe = Recipe.from_orm(recipe_in)
