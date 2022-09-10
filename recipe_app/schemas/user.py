@@ -1,27 +1,36 @@
-from pydantic import BaseModel, EmailStr
-from typing import Optional
+from uuid import UUID
+from pydantic import BaseModel
 
 
-class UserBase(BaseModel):
-    username: str
-    email: Optional[EmailStr]
-    is_superuser: bool = False
+class IngredientSchema(BaseModel):
+    name: str
+    unit: str
+    amount: int
 
 
-class UserCreate(UserBase):
-    email: EmailStr
-
-
-class UserUpdate(UserBase):
-    ...
-
-
-class UserInDBBase(UserBase):
-    id: Optional[int] = None
-
-    class Config:
-        orm_mode = True
-
-
-class User(UserInDBBase):
+class IngredientSchemaIn(IngredientSchema):
     pass
+
+
+class IngredientSchemaOut(IngredientSchema):
+    id: UUID
+    updated_at: int
+    created_at: int
+
+
+class RecipeSchema(BaseModel):
+    name: str
+    cooking_time_min: int
+    num_people: int
+    kcal: int
+    ingredients: list[IngredientSchema]
+
+
+class RecipeSchemaIn(RecipeSchema):
+    pass
+
+
+class RecipeSchemaOut(RecipeSchema):
+    id: UUID
+    updated_at: int
+    created_at: int
