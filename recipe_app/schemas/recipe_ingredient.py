@@ -1,3 +1,4 @@
+from typing import Union
 from uuid import UUID
 from pydantic import BaseModel
 
@@ -13,7 +14,7 @@ class IngredientSchemaIn(IngredientSchema):
 
 
 class IngredientSchemaOut(IngredientSchema):
-    id: UUID
+    pass
     #updated_at: int
     #created_at: int
 
