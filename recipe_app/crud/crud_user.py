@@ -4,7 +4,7 @@ from sqlmodel import Session
 
 from recipe_app.crud.base import CRUDBase
 from recipe_app.models.user import User
-from recipe_app.schemas.user import UserCreate, UserUpdate
+from recipe_app.schemas.recipe_ingredient import UserCreate, UserUpdate
 
 
 class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
