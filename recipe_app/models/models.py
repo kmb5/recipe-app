@@ -1,7 +1,4 @@
-from ast import Num
-from curses.has_key import has_key
 import os
-from typing import Optional
 from pathlib import Path
 from pynamodb.attributes import NumberAttribute, UnicodeAttribute, ListAttribute
 from pynamodb.models import Model
