@@ -1,86 +1,42 @@
+from ast import Num
+from curses.has_key import has_key
+import os
 from typing import Optional
-from sqlmodel import Field, SQLModel, Relationship
+from pathlib import Path
+from pynamodb.attributes import NumberAttribute, UnicodeAttribute, ListAttribute
+from pynamodb.models import Model
+from dotenv import load_dotenv
+
+BASE_DIR = Path(__file__).parent.parent.parent
+load_dotenv(Path(BASE_DIR, ".env"), verbose=True)
 
 
-class User(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True, index=True)
-    username: str
-    email: str = Field(default=None)
-    is_superuser: bool = Field(default=False)
-    recipes: list["Recipe"] = Relationship(back_populates="submitter")
+class BaseModel(Model):
+    class Meta:
+        region = os.getenv('DB_REGION_NAME'),
+        aws_access_key_id = os.getenv('DB_ACCESS_KEY_ID'),
+        aws_secret_access_key = os.getenv('DB_SECRET_ACCESS_KEY')
 
 
-class RecipeBase(SQLModel):
-    name: str = Field(index=True)
-    cooking_time_min: int
-    num_people: int
-    kcal: int
+# class User(SQLModel, table=True):
+#     id: Optional[int] = Field(default=None, primary_key=True, index=True)
+#     username: str
+#     email: str = Field(default=None)
+#     is_superuser: bool = Field(default=False)
+#     recipes: list["Recipe"] = Relationship(back_populates="submitter")
 
 
-class Recipe(RecipeBase, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True, index=True)
-
-    submitter_id: Optional[int] = Field(default=None, foreign_key="user.id")
-    submitter: Optional["User"] = Relationship(back_populates="recipes")
-    ingredients: list["Ingredient"] = Relationship(back_populates="recipe")
-
-
-class RecipeCreate(RecipeBase):
-    submitter_id: int
+class Ingredient(BaseModel):
+    id = UnicodeAttribute(hash_key=True)
+    name = UnicodeAttribute(null=False)
+    unit = UnicodeAttribute(null=False)
+    amount = NumberAttribute(null=False)
 
 
-class RecipeRead(RecipeBase):
-    id: int
-
-
-class RecipeUpdate(SQLModel):
-    id: Optional[int] = None
-    name: Optional[str] = None
-    cooking_time_min: Optional[int] = None
-    num_people: Optional[int] = None
-    kcal: Optional[int] = None
-
-
-class IngredientBase(SQLModel):
-    name: str = Field(index=True)
-    quantity: str
-    amount: int
-    recipe_id: Optional[int] = Field(default=None, foreign_key="recipe.id")
-
-
-class Ingredient(IngredientBase, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True, index=True)
-    recipe: Optional[Recipe] = Relationship(back_populates="ingredients")
-
-
-class IngredientForRecipe(SQLModel):
-    name: str
-    quantity: str
-    amount: int
-
-
-class IngredientRead(IngredientBase):
-    id: int
-
-
-class IngredientCreate(IngredientBase):
-    pass
-
-
-class IngredientUpdate(SQLModel):
-    name: Optional[str] = None
-    quantity: Optional[str] = None
-    amount: Optional[int] = None
-
-
-class RecipeReadWithIngredients(RecipeRead):
-    ingredients: list[Ingredient] = []
-    submitter: Optional[User]
-
-
-class RecipeCreateWithIngredients(RecipeCreate):
-    ingredients: list[Ingredient] = []
-
-
-class IngredientReadWithRecipe(IngredientRead):
-    recipe: Optional[Recipe] = None
+class Recipe(BaseModel):
+    id = UnicodeAttribute(hash_key=True)
+    name = UnicodeAttribute(null=False)
+    cooking_time_min = NumberAttribute(null=False)
+    num_people = NumberAttribute(null=False)
+    kcal = NumberAttribute(null=False)
+    ingredients = ListAttribute(of=Ingredient)
