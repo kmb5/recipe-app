@@ -1,12 +1,13 @@
 from pathlib import Path
 from uuid import UUID
 import uvicorn
-from fastapi import FastAPI, APIRouter
+from fastapi import FastAPI, APIRouter, Request
 from fastapi.templating import Jinja2Templates
 from dotenv import load_dotenv
 
 from recipe_app.crud.base import RecipeRepository, IngredientRepository
 from recipe_app.schemas.recipe_ingredient import RecipeSchemaIn, RecipeSchemaOut, IngredientSchemaIn, IngredientSchemaOut
+from recipe_app.models.models import Recipe, Ingredient
 
 
 # Project Directories
@@ -16,13 +17,19 @@ TEMPLATES = Jinja2Templates(directory=str(BASE_PATH / "templates"))
 
 load_dotenv(Path(ROOT, ".env"))
 
-app = FastAPI(title="Recipe API")
+app = FastAPI(title="Recipe APIs")
 api_router = APIRouter()
 
 
-# @app.on_event("startup")
-# def on_startup():
-#     SQLModel.metadata.create_all(deps.engine)
+@api_router.on_event("startup")
+def setup_tables():
+    if not Recipe.exists():
+        Recipe.create_table(read_capacity_units=1,
+                            write_capacity_units=1, wait=True)
+
+    if not Ingredient.exists():
+        Ingredient.create_table(read_capacity_units=1,
+                                write_capacity_units=1, wait=True)
 
 
 @api_router.get("/ping", status_code=200)
@@ -54,13 +61,13 @@ def create_recipe(ingredient_in: IngredientSchemaIn) -> IngredientSchemaOut:
     return ingredient_out
 
 
-# @api_router.get("/", status_code=200)
-# def root(request: Request, db_session: Session = Depends(deps.get_session)) -> dict:
-#     """
-#     Root GET
-#     """
-#     recipes = db_session.exec(select(Recipe).offset(0).limit(100)).all()
-#     return TEMPLATES.TemplateResponse("index.html", {"request": request, "recipes": recipes})
+@api_router.get("/", status_code=200)
+def root(request: Request) -> dict:
+    """
+    Root GET
+    """
+    recipes = RecipeRepository.get_all()
+    return TEMPLATES.TemplateResponse("index.html", {"request": request, "recipes": recipes})
 
 
 # @api_router.get('/ingredients/{ingredient_id}', status_code=200, response_model=IngredientReadWithRecipe)

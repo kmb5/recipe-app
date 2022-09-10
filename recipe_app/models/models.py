@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
-from pynamodb.attributes import NumberAttribute, UnicodeAttribute, ListAttribute
+from pynamodb.attributes import NumberAttribute, UnicodeAttribute, ListAttribute, MapAttribute
+from uuid import uuid4
 from pynamodb.models import Model
 from dotenv import load_dotenv
 
@@ -10,7 +11,7 @@ load_dotenv(Path(BASE_DIR, ".env"), verbose=True)
 
 class BaseModel(Model):
     class Meta:
-        region = os.getenv('DB_REGION_NAME'),
+        region_name = os.getenv('DB_REGION_NAME'),
         aws_access_key_id = os.getenv('DB_ACCESS_KEY_ID'),
         aws_secret_access_key = os.getenv('DB_SECRET_ACCESS_KEY')
 
@@ -24,6 +25,10 @@ class BaseModel(Model):
 
 
 class Ingredient(BaseModel):
+
+    class Meta(BaseModel.Meta):
+        table_name = "ingredients"
+
     id = UnicodeAttribute(hash_key=True)
     name = UnicodeAttribute(null=False)
     unit = UnicodeAttribute(null=False)
@@ -31,9 +36,13 @@ class Ingredient(BaseModel):
 
 
 class Recipe(BaseModel):
+
+    class Meta(BaseModel.Meta):
+        table_name = "recipes"
+
     id = UnicodeAttribute(hash_key=True)
     name = UnicodeAttribute(null=False)
     cooking_time_min = NumberAttribute(null=False)
     num_people = NumberAttribute(null=False)
     kcal = NumberAttribute(null=False)
-    ingredients = ListAttribute(of=Ingredient)
+    ingredients = ListAttribute()

@@ -12,10 +12,10 @@ class RecipeRepository:
 
     @staticmethod
     def _preprocess_create(values: Dict[str, Any]) -> Dict[str, Any]:
-        timestamp_now = time.time()
+        #imestamp_now = time.time()
         values["id"] = str(uuid.uuid4())
-        values["created_at"] = timestamp_now
-        values["updated_at"] = timestamp_now
+        #values["created_at"] = timestamp_now
+        #values["updated_at"] = timestamp_now
 
         return values
 
@@ -31,6 +31,12 @@ class RecipeRepository:
         model = cls.table.get(str(entry_id))
         return cls.schema_out(**model.attribute_values)
 
+    @classmethod
+    def get_all(cls) -> list[RecipeSchemaOut]:
+        items = cls.table.scan()
+        print(items.next())
+        return [cls.schema_out(**model.attribute_values) for model in items]
+
 
 class IngredientRepository:
     table: Ingredient = Ingredient
@@ -38,10 +44,10 @@ class IngredientRepository:
 
     @staticmethod
     def _preprocess_create(values: Dict[str, Any]) -> Dict[str, Any]:
-        timestamp_now = time.time()
+        #timestamp_now = time.time()
         values["id"] = str(uuid.uuid4())
-        values["created_at"] = timestamp_now
-        values["updated_at"] = timestamp_now
+        #values["created_at"] = timestamp_now
+        #values["updated_at"] = timestamp_now
 
         return values
 

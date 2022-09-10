@@ -14,8 +14,8 @@ class IngredientSchemaIn(IngredientSchema):
 
 class IngredientSchemaOut(IngredientSchema):
     id: UUID
-    updated_at: int
-    created_at: int
+    #updated_at: int
+    #created_at: int
 
 
 class RecipeSchema(BaseModel):
@@ -32,5 +32,5 @@ class RecipeSchemaIn(RecipeSchema):
 
 class RecipeSchemaOut(RecipeSchema):
     id: UUID
-    updated_at: int
-    created_at: int
+    #updated_at: int
+    #created_at: int
