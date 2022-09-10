@@ -1,66 +1,36 @@
-from __future__ import annotations
-
-from typing import Sequence, Any
-from unittest.util import strclass
+from uuid import UUID
 from pydantic import BaseModel
 
-from recipe_app.schemas.user import User
 
-
-class RecipeBase(BaseModel):
+class IngredientSchema(BaseModel):
     name: str
-    cooking_time_min: int
-    num_people: int
-    kcal: int
-    submitter_id: int
-    ingredients: list[Any]
+    unit: str
+    amount: int
 
 
-class RecipeCreate(RecipeBase):
+class IngredientSchemaIn(IngredientSchema):
     pass
 
 
-class RecipeInDBBase(BaseModel):
-    id: int
+class IngredientSchemaOut(IngredientSchema):
+    id: UUID
+    updated_at: int
+    created_at: int
+
+
+class RecipeSchema(BaseModel):
     name: str
     cooking_time_min: int
     num_people: int
     kcal: int
-    submitter_id: int
-    submitter: User
-    ingredients: list[Any]
-
-    class Config:
-        orm_mode = True
+    ingredients: list[IngredientSchema]
 
 
-class Ingredient(BaseModel):
-    name: str
-
-    class Config:
-        orm_mode = True
+class RecipeSchemaIn(RecipeSchema):
+    pass
 
 
-class IngredientBase(BaseModel):
-    name: str
-
-    class Config:
-        orm_mode = True
-
-
-class RecipeIngredientBase(BaseModel):
-    recipe_id: int
-    ingredient_id: int
-    amount: int
-    unit: str
-    ingredient: Ingredient
-
-    class Config:
-        orm_mode = True
-
-
-class RecipeSearchResults(BaseModel):
-    results: Sequence[Any]
-
-
-RecipeInDBBase.update_forward_refs()
+class RecipeSchemaOut(RecipeSchema):
+    id: UUID
+    updated_at: int
+    created_at: int
