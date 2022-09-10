@@ -5,7 +5,7 @@ from fastapi import FastAPI, APIRouter, Request, Query
 from fastapi.templating import Jinja2Templates
 from dotenv import load_dotenv
 
-from recipe_app.schemas.recipe_ingredient import RecipeSchemaIn, RecipeSchemaOut, IngredientSchemaOut
+from recipe_app.schemas.recipe_ingredient import RecipeSchemaIn, RecipeSchemaOut, IngredientSchema
 from recipe_app.models.models import Recipe
 
 
@@ -38,7 +38,7 @@ def get_all_recipes(limit: int = Query(default=100, lte=100)) -> list[RecipeSche
     schemas = []
 
     for model in items:
-        model.ingredients = [IngredientSchemaOut(
+        model.ingredients = [IngredientSchema(
             **ingredient.attribute_values) for ingredient in model.ingredients]
         schemas.append(RecipeSchemaOut(**model.attribute_values))
 
@@ -48,7 +48,7 @@ def get_all_recipes(limit: int = Query(default=100, lte=100)) -> list[RecipeSche
 @api_router.get('/recipes/{recipe_id}', status_code=200, response_model=RecipeSchemaOut)
 def get_recipe(recipe_id: UUID) -> RecipeSchemaOut:
     model = Recipe.get(str(recipe_id))
-    model.ingredients = [IngredientSchemaOut(
+    model.ingredients = [IngredientSchema(
         **ingredient.attribute_values) for ingredient in model.ingredients]
 
     return RecipeSchemaOut(**model.attribute_values)
@@ -61,14 +61,14 @@ def create_recipe(recipe_in: RecipeSchemaIn) -> RecipeSchemaOut:
     model = Recipe(**dct)
     model.save()
 
-    model.ingredients = [IngredientSchemaOut(
+    model.ingredients = [IngredientSchema(
         **ingredient) for ingredient in model.ingredients]
 
     return RecipeSchemaOut(**model.attribute_values)
 
 
-@api_router.get('/ingredients', status_code=200, response_model=list[IngredientSchemaOut])
-def get_all_ingredients() -> list[IngredientSchemaOut]:
+@api_router.get('/ingredients', status_code=200, response_model=list[IngredientSchema])
+def get_all_ingredients() -> list[IngredientSchema]:
     all_recipes = get_all_recipes(limit=None)
     all_ingredients = []
 
