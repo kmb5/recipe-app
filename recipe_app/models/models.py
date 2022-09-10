@@ -16,20 +16,8 @@ class BaseModel(Model):
         aws_secret_access_key = os.getenv('DB_SECRET_ACCESS_KEY')
 
 
-# class User(SQLModel, table=True):
-#     id: Optional[int] = Field(default=None, primary_key=True, index=True)
-#     username: str
-#     email: str = Field(default=None)
-#     is_superuser: bool = Field(default=False)
-#     recipes: list["Recipe"] = Relationship(back_populates="submitter")
+class Ingredient(MapAttribute):
 
-
-class Ingredient(BaseModel):
-
-    class Meta(BaseModel.Meta):
-        table_name = "ingredients"
-
-    id = UnicodeAttribute(hash_key=True)
     name = UnicodeAttribute(null=False)
     unit = UnicodeAttribute(null=False)
     amount = NumberAttribute(null=False)
@@ -45,4 +33,4 @@ class Recipe(BaseModel):
     cooking_time_min = NumberAttribute(null=False)
     num_people = NumberAttribute(null=False)
     kcal = NumberAttribute(null=False)
-    ingredients = ListAttribute()
+    ingredients = ListAttribute(of=Ingredient)
