@@ -1,4 +1,4 @@
-from email.mime import base
+import re
 from pathlib import Path
 from uuid import UUID, uuid4
 import json
@@ -7,7 +7,7 @@ from fastapi import FastAPI, APIRouter, Request, Query
 from fastapi.templating import Jinja2Templates
 from dotenv import load_dotenv
 
-from recipe_app.schemas.recipe_ingredient import RecipeSchemaIn, RecipeSchemaOut, IngredientSchema
+from recipe_app.schemas.recipe_ingredient import RecipeSchemaIn, RecipeSchemaOut, IngredientSchema, RecipeSearch
 from recipe_app.models.models import Recipe
 from recipe_app.base_recipes import recipes
 
@@ -19,7 +19,7 @@ TEMPLATES = Jinja2Templates(directory=str(BASE_PATH / "templates"))
 
 load_dotenv(Path(ROOT, ".env"))
 
-app = FastAPI(title="Recipe API")
+app = FastAPI(title="Recipes API")
 api_router = APIRouter()
 
 
@@ -51,14 +51,23 @@ def ping() -> dict:
     return {"ping": "pong"}
 
 
+@api_router.get("/", status_code=200)
+def root(request: Request) -> dict:
+    """
+    Root GET
+    """
+    recipes = get_all_recipes(limit=None)
+    return TEMPLATES.TemplateResponse("index.html", {"request": request, "recipes": recipes})
+
+
 @api_router.get('/recipes', status_code=200, response_model=list[RecipeSchemaOut])
 def get_all_recipes(limit: int = Query(default=100, lte=100)) -> list[RecipeSchemaOut]:
     items = Recipe.scan(limit=limit)
     schemas = []
 
     for model in items:
-        model = json.loads(model.to_json())
-        schemas.append(RecipeSchemaOut(**model))
+        m = json.loads(model.to_json())
+        schemas.append(RecipeSchemaOut(**m))
     return schemas
 
 
@@ -73,11 +82,17 @@ def get_recipe(recipe_id: UUID) -> RecipeSchemaOut:
 def create_recipe(recipe_in: RecipeSchemaIn) -> RecipeSchemaOut:
     dct = recipe_in.dict()
     dct["id"] = str(uuid4())
+    dct["search_name"] = _create_search_name(recipe_in.name)
     model = Recipe(**dct)
     model.save()
 
     model = json.loads(model.to_json())
     return RecipeSchemaOut(**model)
+
+
+def _create_search_name(name: str) -> str:
+    name_lower = name.lower()
+    return re.sub(r'[^a-z\ ]', '', name_lower).strip()
 
 
 @api_router.get('/ingredients', status_code=200, response_model=list[IngredientSchema])
@@ -91,13 +106,21 @@ def get_all_ingredients() -> list[IngredientSchema]:
     return all_ingredients
 
 
-@api_router.get("/", status_code=200)
-def root(request: Request) -> dict:
-    """
-    Root GET
-    """
-    recipes = get_all_recipes(limit=None)
-    return TEMPLATES.TemplateResponse("index.html", {"request": request, "recipes": recipes})
+@api_router.post('/search', status_code=200, response_model=list[RecipeSchemaOut] | None)
+def search_ingredients(recipe_search: RecipeSearch) -> list[RecipeSchemaOut]:
+    schemas = []
+    if recipe_search.name:
+        found = [item for item in Recipe.scan(
+            Recipe.search_name.contains(recipe_search.name.lower()))]
+        if found:
+            for item in found:
+                model = json.loads(item.to_json())
+                schemas.append(RecipeSchemaOut(**model))
+
+    if recipe_search.ingredients:
+        pass
+
+    return schemas
 
 
 app.include_router(api_router)

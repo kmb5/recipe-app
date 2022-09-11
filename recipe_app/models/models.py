@@ -19,7 +19,7 @@ class BaseModel(Model):
 class Ingredient(MapAttribute):
 
     name = UnicodeAttribute(null=False)
-    description = UnicodeAttribute(null=True)
+    search_name = UnicodeAttribute(null=True)
     amount = NumberAttribute(null=False)
     unit = UnicodeAttribute(null=False)
 
@@ -31,6 +31,8 @@ class Recipe(BaseModel):
 
     id = UnicodeAttribute(hash_key=True, default=uuid4)
     name = UnicodeAttribute(null=False)
+    description = UnicodeAttribute(null=True)
+    search_name = UnicodeAttribute(null=False)
     cooking_time_min = NumberAttribute(null=False)
     num_people = NumberAttribute(null=False)
     kcal = NumberAttribute(null=False)

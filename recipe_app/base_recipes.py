@@ -1,6 +1,7 @@
 recipes = [
     {
         'name': 'Hungarian "Challah" / Kalács',
+        'search_name': 'hungarian challah kalacs',
         'cooking_time_min': 60,
         'num_people': 4,
         'kcal': 0,
@@ -45,6 +46,7 @@ recipes = [
     },
     {
         'name': 'Beans in tomato sauce with Haloumi',
+        'search_name': 'beans in tomato sauce with haloumi',
         'cooking_time_min': 35,
         'num_people': 2,
         'kcal': 1268,
@@ -113,6 +115,7 @@ recipes = [
     },
     {
         'name': 'Flammkuchen with Mozzarella and Bacon',
+        'search_name': 'flammkuchen with mozzarella and bacon',
         'cooking_time_min': 30,
         'num_people': 2,
         'kcal': 1544,

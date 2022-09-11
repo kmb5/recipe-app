@@ -4,7 +4,7 @@ from uuid import UUID
 from pydantic import BaseModel
 
 
-class Unit(Enum):
+class Unit(str, Enum):
     GRAM = 'g'
     LITER = 'l'
     MILLILITER = 'ml'
@@ -13,6 +13,7 @@ class Unit(Enum):
 
 class IngredientSchema(BaseModel):
     name: str
+    search_name: str | None
     amount: int
     unit: Unit
 
@@ -33,3 +34,9 @@ class RecipeSchemaIn(RecipeSchema):
 
 class RecipeSchemaOut(RecipeSchema):
     id: UUID
+    search_name: str
+
+
+class RecipeSearch(BaseModel):
+    name: str | None
+    ingredients: List[str] | None
