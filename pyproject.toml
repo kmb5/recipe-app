@@ -7,15 +7,10 @@ authors = ["Máté Bendegúz Kovács <20370225+kmb5@users.noreply.github.com>"]
 [tool.poetry.dependencies]
 python = "^3.10"
 fastapi = "^0.79.0"
-FastAPI-SQLAlchemy = "^0.2.1"
 pydantic = {extras = ["email"], version = "^1.9.1"}
-alembic = "^1.8.1"
 uvicorn = "^0.18.2"
-psycopg2-binary = "^2.9.3"
 python-dotenv = "^0.20.0"
 Jinja2 = "^3.1.2"
-sqlmodel = "^0.0.6"
-SQLAlchemy = ">=1.4.17,<=1.4.35"
 boto3 = "^1.24.70"
 pynamodb = "^5.2.1"
 
