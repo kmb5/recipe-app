@@ -1,5 +1,7 @@
+from email.mime import base
 from pathlib import Path
 from uuid import UUID, uuid4
+import json
 import uvicorn
 from fastapi import FastAPI, APIRouter, Request, Query
 from fastapi.templating import Jinja2Templates
@@ -7,6 +9,7 @@ from dotenv import load_dotenv
 
 from recipe_app.schemas.recipe_ingredient import RecipeSchemaIn, RecipeSchemaOut, IngredientSchema
 from recipe_app.models.models import Recipe
+from recipe_app.base_recipes import recipes
 
 
 # Project Directories
@@ -16,7 +19,7 @@ TEMPLATES = Jinja2Templates(directory=str(BASE_PATH / "templates"))
 
 load_dotenv(Path(ROOT, ".env"))
 
-app = FastAPI(title="Recipe APIs")
+app = FastAPI(title="Recipe API")
 api_router = APIRouter()
 
 
@@ -25,6 +28,22 @@ def setup_tables():
     if not Recipe.exists():
         Recipe.create_table(read_capacity_units=1,
                             write_capacity_units=1, wait=True)
+
+    cnt = len(list(Recipe.scan()))
+    if cnt == 0:
+        print('Setting up base recipes...')
+        with Recipe.batch_write() as batch:
+            base_recipes = _prepare_base_recipes()
+            for item in base_recipes:
+                batch.save(item)
+
+
+def _prepare_base_recipes():
+    base_recipes = [Recipe(**recipe) for recipe in recipes]
+    for r in base_recipes:
+        r.id = str(uuid4())
+
+    return base_recipes
 
 
 @api_router.get("/ping", status_code=200)
@@ -38,20 +57,16 @@ def get_all_recipes(limit: int = Query(default=100, lte=100)) -> list[RecipeSche
     schemas = []
 
     for model in items:
-        model.ingredients = [IngredientSchema(
-            **ingredient.attribute_values) for ingredient in model.ingredients]
-        schemas.append(RecipeSchemaOut(**model.attribute_values))
-
+        model = json.loads(model.to_json())
+        schemas.append(RecipeSchemaOut(**model))
     return schemas
 
 
 @api_router.get('/recipes/{recipe_id}', status_code=200, response_model=RecipeSchemaOut)
 def get_recipe(recipe_id: UUID) -> RecipeSchemaOut:
     model = Recipe.get(str(recipe_id))
-    model.ingredients = [IngredientSchema(
-        **ingredient.attribute_values) for ingredient in model.ingredients]
-
-    return RecipeSchemaOut(**model.attribute_values)
+    model = json.loads(model.to_json())
+    return RecipeSchemaOut(**model)
 
 
 @api_router.post('/recipes', status_code=201, response_model=RecipeSchemaOut)
@@ -61,10 +76,8 @@ def create_recipe(recipe_in: RecipeSchemaIn) -> RecipeSchemaOut:
     model = Recipe(**dct)
     model.save()
 
-    model.ingredients = [IngredientSchema(
-        **ingredient) for ingredient in model.ingredients]
-
-    return RecipeSchemaOut(**model.attribute_values)
+    model = json.loads(model.to_json())
+    return RecipeSchemaOut(**model)
 
 
 @api_router.get('/ingredients', status_code=200, response_model=list[IngredientSchema])
